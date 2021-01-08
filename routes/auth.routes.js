@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const config = require('config');
-const User = require('./models/User');
+const User = require('../models/User');
 
 const router = Router();
 //  /api/auth/register
@@ -11,7 +11,7 @@ router.post(
   '/register',
   [
     check('email', 'Некоректний емейл').isEmail(),
-    check('password', 'Мінімальна довжина паролю 6 символів').length({
+    check('password', 'Мінімальна довжина паролю 6 символів').isLength({
       min: 6,
     }),
   ],
@@ -75,7 +75,7 @@ router.post(
         expiresIn: '1h',
       });
 
-      res.json(token, (userId: user.id));
+      res.json(token, { userId: user.id });
     } catch (error) {
       res.status(500).json({ message: 'Щось пішло не так, спробуйте знову' });
     }
