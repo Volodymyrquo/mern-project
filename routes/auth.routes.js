@@ -2,6 +2,7 @@ const { Router } = require('express');
 const bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
+const config = require('config');
 const User = require('./models/User');
 
 const router = Router();
@@ -70,7 +71,11 @@ router.post(
         }
       }
 
-      const token = jwt.sign({});
+      const token = jwt.sign({ userId: user.id }, config.get('jwtSecret'), {
+        expiresIn: '1h',
+      });
+
+      res.json(token, (userId: user.id));
     } catch (error) {
       res.status(500).json({ message: 'Щось пішло не так, спробуйте знову' });
     }
