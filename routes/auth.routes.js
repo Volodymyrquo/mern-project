@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
 const User = require('./models/User');
 
 const router = Router();
@@ -37,18 +38,43 @@ router.post(
   }
 );
 //  /api/auth/login
-router.post('/login', [], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        errors: errors.array(),
-        message: 'Некоректні дані під час входу в систему',
-      });
+router.post(
+  '/login',
+  [
+    check('email', 'Введіть коректний емейл').normalizeEmail().isEmail,
+    check('password', 'Введіть пароль').exists(),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          errors: errors.array(),
+          message: 'Некоректні дані під час входу в систему',
+        });
+      }
+
+      const { email, password } = req.body;
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(400).json({
+          message: 'Користувача не знайдено',
+        });
+
+        const isMatch = bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+          return res
+            .status(400)
+            .json({ message: 'Невірний пароль, спробуйте знову' });
+        }
+      }
+
+      const token = jwt.sign({});
+    } catch (error) {
+      res.status(500).json({ message: 'Щось пішло не так, спробуйте знову' });
     }
-  } catch (error) {
-    res.status(500).json({ message: 'Щось пішло не так, спробуйте знову' });
   }
-});
+);
 
 module.exports = router;
